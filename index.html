@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Absorb Follow-ups Triage — 2026-05-17</title>
+<style>
+  :root {
+    --bg: #ECE5D6;
+    --paper: #FAFAF8;
+    --ink: #161513;
+    --ink-soft: #4A453E;
+    --blue: #1E3A5F;
+    --blue-deep: #15294A;
+    --sage: #2D4A3E;
+    --gold: #C28E26;
+    --muted: #6B655C;
+    --hair: #D8D1C1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    padding: 28px 32px; min-height: 100vh;
+  }
+  header { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid var(--blue); }
+  h1 { font-size: 22pt; letter-spacing: -0.01em; color: var(--blue); margin-bottom: 4px; }
+  .sub { color: var(--muted); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .summary {
+    background: var(--paper); padding: 16px 20px; border-left: 4px solid var(--sage);
+    margin-bottom: 22px; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12px;
+  }
+  .summary strong { color: var(--blue); font-weight: 700; }
+  .controls {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 22px; padding: 14px 18px; background: var(--paper);
+    border: 1px solid var(--hair); border-radius: 4px;
+  }
+  .controls input[type="text"] {
+    flex: 1; min-width: 260px; padding: 8px 12px;
+    border: 1px solid var(--hair); border-radius: 3px;
+    font-family: inherit; font-size: 13px; background: white;
+  }
+  .controls .count {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+    color: var(--muted); letter-spacing: 0.05em;
+  }
+  .controls button {
+    padding: 8px 14px; border: 1px solid var(--blue); background: var(--blue);
+    color: white; border-radius: 3px; cursor: pointer; font-size: 12px;
+    font-family: inherit; font-weight: 600;
+  }
+  .controls button.alt { background: var(--paper); color: var(--blue); }
+  .controls button:hover { opacity: 0.9; }
+
+  .card {
+    background: var(--paper); border: 1px solid var(--hair);
+    border-left: 4px solid var(--hair);
+    border-radius: 4px; padding: 16px 20px; margin-bottom: 14px;
+    transition: border-left-color 0.15s;
+  }
+  .card.today { border-left-color: var(--sage); background: #F4F7F0; }
+  .card.later { border-left-color: var(--gold); }
+  .card.skip { border-left-color: var(--muted); opacity: 0.55; }
+  .card-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 10px; gap: 16px;
+  }
+  .card-id {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: 0.05em; color: var(--muted);
+  }
+  .card-id strong { color: var(--blue); font-size: 14px; font-weight: 700; }
+  .url-link {
+    color: var(--blue); text-decoration: none; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px; word-break: break-all;
+  }
+  .url-link:hover { text-decoration: underline; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag {
+    background: var(--bg); padding: 3px 9px; border-radius: 3px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .tag.skill { color: white; background: var(--blue); }
+  .tag.leverage { color: white; background: var(--sage); }
+  .tag.placement { color: var(--ink); background: var(--gold); font-weight: 600; }
+  .reason {
+    color: var(--ink-soft); font-size: 13px; line-height: 1.55;
+    margin-bottom: 12px;
+  }
+  .choices {
+    display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid var(--hair);
+  }
+  .choice {
+    flex: 1; text-align: center; padding: 8px 12px; border-radius: 3px;
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    font-family: inherit; border: 1px solid var(--hair); background: white;
+    color: var(--ink-soft); transition: all 0.1s;
+    user-select: none;
+  }
+  .choice:hover { border-color: var(--blue); color: var(--blue); }
+  .choice.active.today { background: var(--sage); color: white; border-color: var(--sage); }
+  .choice.active.later { background: var(--gold); color: white; border-color: var(--gold); }
+  .choice.active.skip { background: var(--muted); color: white; border-color: var(--muted); }
+  .export {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--blue); color: white; border: none;
+    padding: 14px 22px; border-radius: 4px; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+  }
+  .export:hover { background: var(--blue-deep); }
+  .export-out {
+    margin-top: 28px; padding: 18px; background: var(--ink); color: var(--bg);
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px;
+    border-radius: 4px; white-space: pre-wrap; display: none; line-height: 1.5;
+  }
+  .export-out.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Absorb Follow-ups Triage <span style="color:var(--gold)">.</span></h1>
+  <div class="sub">2026-05-17 . session sprint-2 . PROCEED small-tier NOT in Hermes M7 auto-wire allowlist . manual decision required</div>
+</header>
+
+<div class="summary">
+  <strong>11 items</strong> from this drain cycle (absorb_queue ids #3 through #78).
+  All are PROCEED-small-tier (enhance / extend / new_tool) verdicts that target skills OUTSIDE the 4 Hermes auto-wire allowed skills
+  (ctq-social, client-intake, library, boubacar-prompts). They land in <code>docs/reviews/absorb-followups.md</code>
+  as manual TODOs. Your call: ship TODAY, queue for LATER, or SKIP.
+  <br><br>
+  <strong>Convention used by the export:</strong> TODAY = ship this session; LATER = goes to absorb-followups.md with 7-day target;
+  SKIP = noted as reviewed-not-pursued.
+</div>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Filter by skill, leverage, or text..." />
+  <span class="count" id="counter">0 today . 0 later . 0 skip . 11 unassigned</span>
+  <button onclick="markAll('later')" class="alt">Mark all LATER</button>
+  <button onclick="clearAll()" class="alt">Clear</button>
+</div>
+
+<div id="cards"></div>
+
+<button class="export" onclick="exportDecisions()">Export decisions ↓</button>
+<pre class="export-out" id="export-out"></pre>
+
+<script>
+const ITEMS = [
+  {id: 78, url: "https://x.com/i/status/2055679972899999870", placement: "enhance", leverage: "continuous-improvement", target: "skills/atlas-autonomy", reason: "Draft a 'work-packet' template (5-block structure from the post) as skills/atlas-autonomy/templates/agent-work-packet.md and add a 1-paragraph section to skills/atlas-autonomy/SKILL.md documenting when to issue a Day-1 packet vs catch-up packet vs task packet to a CrewAI agent."},
+  {id: 76, url: "https://x.com/i/status/2055712252242837623", placement: "enhance", leverage: "producing-motion", target: "skills/studio-ugc-pipeline", reason: "Extract the 4-layer system spec (script/hook, character gen, localization, distribution infra) into a reference doc at skills/studio-ugc-pipeline/references/ai-ugc-system-bella-2026-05-18.md; map each tool (Nano Banana 2, Kling/Sora 2 pro, Veo 3.1, OpenClaw, n8n) against what is already wired in the Studio skill and flag gaps for procurement/integration."},
+  {id: 66, url: "https://x.com/i/status/2056038230454112601", placement: "enhance", leverage: "producing-motion", target: "skills/website-intelligence", reason: "Add a 'mockup-first cold-outreach' section to skills/website-intelligence/SKILL.md: Maps query pattern, Claude diagnosis prompt (verbatim from post), Lovable deploy brief template, Higgsfield video prompt, 65-word message template, follow-up cadence, and the three hard rules (no AI mention, vertical only, Zoom close only)."},
+  {id: 59, url: "https://x.com/i/status/2055035402294046731", placement: "enhance", leverage: "continuous-improvement", target: "skills/agentshq-absorb", reason: "Add a '/goal usage patterns' reference doc to skills/agentshq-absorb (or a shared skills/_references/ location) documenting: the [task] until [condition] without [constraint] skeleton, the multi-file memory pattern (progress.md / plan.md / decisions.md), measurable-criteria checklist, and the parallel-goals operator pattern. Then reference it from CLAUDE.md under 'Long autonomous runs'."},
+  {id: 56, url: "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide", placement: "enhance", leverage: "continuous-improvement", target: "skills/website-intelligence", reason: "Extract the technical checklist items (structured data types, robots.txt directives, E-E-A-T signals, llms.txt spec, AI agent accessibility requirements) into a reference doc at skills/website-intelligence/references/google-aio-optimization-checklist.md and wire a GEO audit step into the SW website-build delivery checklist."},
+  {id: 52, url: "https://x.com/i/status/2055505558795407493", placement: "enhance", leverage: "producing-motion", target: "skills/content-board", reason: "Add a 'Hook Quality Gate' section to skills/content-board/SKILL.md: two-part structure rule (confirm → tension), first-sentence standalone test, title-keyword mirror rule, specific-gap vs vague-gap test. Include the three example hooks as calibration anchors."},
+  {id: 50, url: "https://x.com/i/status/2055320282211209607", placement: "enhance", leverage: "continuous-improvement", target: "skills/agentshq-absorb + CLAUDE.md", reason: "Extract three concrete updates: (1) add 60%-context-clear rule + git-worktree parallel-session pattern to CLAUDE.md operational notes; (2) queue the 6 named repos (obra/superpowers, affaan-m/everything-claude-code, czlonkowski/n8n-mcp, VoltAgent/awesome-agent-skills, VoltAgent/awesome-claude-code-subagents, ComposioHQ/awesome-claude-skills) into absorb_queue for batch cluster evaluation; (3) draft encoded-preference skill file at skills/consulting-pricing/SKILL.md capturing the ROI pricing rules and Loom-first delivery framework."},
+  {id: 48, url: "https://x.com/i/status/2055214995588141287", placement: "enhance", leverage: "producing-motion", target: "skills/studio-channel-cloner", reason: "Add a prompts/faceless-channel-prompts.md reference file to skills/studio-channel-cloner containing the 4 validated prompts, the pipeline map, the 7-mistake checklist, and the RPM-based revenue model table."},
+  {id: 42, url: "https://x.com/i/status/2055719881493123275", placement: "enhance", leverage: "continuous-improvement", target: "skills/content-board", reason: "Extract the 14-signal scoring model and the Voice Style Guide prompt template into a reference doc at skills/content-board/references/x-algorithm-signals.md; wire algorithm context into the content-board skill's CLAUDE.md project file as a persistent scoring lens."},
+  {id: 41, url: "https://x.com/i/status/2054096165055217987", placement: "enhance", leverage: "continuous-improvement", target: "skills/agentshq-absorb", reason: "Add a /goal block template to the PROCEED output format in skills/agentshq-absorb/SKILL.md (Phase 5 section) so every PROCEED verdict auto-generates a ready-to-paste /goal prompt pre-filled with the absorb's next_action, placement_target, constraints (don't touch existing skill triggers), DONE WHEN (parity test passes), and VERIFY fields."},
+  {id: 3, url: "https://x.com/i/status/2054531959528079430", placement: "enhance", leverage: "producing-motion", target: "skills/content-board", reason: "Pull the AiToEarn GitHub repo (likely reachable via the t.co link in the tweet, resolve it), run Phase 1 security scan on the manifest and Dockerfile, then assess whether the Docker self-host fits the VPS stack and maps to a skills/content-board enhancement (e.g. replacing or augmenting current multi-platform publish nodes)."},
+];
+
+const STORAGE_KEY = "absorb_triage_2026_05_17";
+let decisions = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+function el(tag, props, children) {
+  const e = document.createElement(tag);
+  if (props) {
+    if (props.className) e.className = props.className;
+    if (props.text) e.textContent = props.text;
+    if (props.href) e.href = props.href;
+    if (props.target) e.target = props.target;
+    if (props.style) e.setAttribute("style", props.style);
+    if (props.data) Object.entries(props.data).forEach(([k,v]) => e.dataset[k] = v);
+    if (props.onClick) e.addEventListener("click", props.onClick);
+  }
+  if (children) children.forEach(c => c && e.appendChild(c));
+  return e;
+}
+
+function buildCard(item) {
+  const dec = decisions[item.id] || "";
+
+  const idStrong = el("strong", { text: "#" + item.id });
+  const sep = document.createTextNode("  ·  ");
+  const urlA = el("a", { className: "url-link", href: item.url, target: "_blank", text: item.url });
+  const cardId = el("div", { className: "card-id" }, [idStrong, sep, urlA]);
+  const cardHead = el("div", { className: "card-head" }, [cardId]);
+
+  const tagPlace = el("span", { className: "tag placement", text: item.placement });
+  const tagSkill = el("span", { className: "tag skill", text: item.target });
+  const tagLev = el("span", { className: "tag leverage", text: item.leverage });
+  const tags = el("div", { className: "tags" }, [tagPlace, tagSkill, tagLev]);
+
+  const reason = el("div", { className: "reason", text: item.reason });
+
+  const handler = (e) => {
+    const id = e.currentTarget.dataset.id;
+    const d = e.currentTarget.dataset.d;
+    if (decisions[id] === d) delete decisions[id];
+    else decisions[id] = d;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(decisions));
+    render();
+  };
+  const cToday = el("div", {
+    className: "choice today" + (dec==="today" ? " active" : ""),
+    text: "→ Ship TODAY",
+    data: { id: String(item.id), d: "today" },
+    onClick: handler,
+  });
+  const cLater = el("div", {
+    className: "choice later" + (dec==="later" ? " active" : ""),
+    text: "📅 Queue LATER",
+    data: { id: String(item.id), d: "later" },
+    onClick: handler,
+  });
+  const cSkip = el("div", {
+    className: "choice skip" + (dec==="skip" ? " active" : ""),
+    text: "✕ SKIP",
+    data: { id: String(item.id), d: "skip" },
+    onClick: handler,
+  });
+  const choices = el("div", { className: "choices" }, [cToday, cLater, cSkip]);
+
+  const card = el("div", { className: "card " + dec }, [cardHead, tags, reason, choices]);
+  return card;
+}
+
+function render() {
+  const search = document.getElementById("search").value.toLowerCase();
+  const cards = document.getElementById("cards");
+  while (cards.firstChild) cards.removeChild(cards.firstChild);
+  ITEMS.forEach(item => {
+    const txt = (item.target + " " + item.leverage + " " + item.reason + " " + item.url + " " + item.placement).toLowerCase();
+    if (search && !txt.includes(search)) return;
+    cards.appendChild(buildCard(item));
+  });
+  updateCounter();
+}
+
+function updateCounter() {
+  const t = Object.values(decisions).filter(x=>x==="today").length;
+  const l = Object.values(decisions).filter(x=>x==="later").length;
+  const s = Object.values(decisions).filter(x=>x==="skip").length;
+  const u = ITEMS.length - t - l - s;
+  document.getElementById("counter").textContent = `${t} today . ${l} later . ${s} skip . ${u} unassigned`;
+}
+
+function markAll(d) {
+  ITEMS.forEach(i => { decisions[i.id] = d; });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decisions));
+  render();
+}
+
+function clearAll() {
+  decisions = {};
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(decisions));
+  render();
+}
+
+function exportDecisions() {
+  const grouped = { today: [], later: [], skip: [], unassigned: [] };
+  ITEMS.forEach(i => {
+    const d = decisions[i.id] || "unassigned";
+    grouped[d].push(i);
+  });
+  const lines = [];
+  lines.push("# Absorb Follow-ups Triage Decisions — 2026-05-17");
+  lines.push("");
+  lines.push(`Today: ${grouped.today.length} . Later: ${grouped.later.length} . Skip: ${grouped.skip.length} . Unassigned: ${grouped.unassigned.length}`);
+  lines.push("");
+  for (const bucket of ["today", "later", "skip", "unassigned"]) {
+    if (grouped[bucket].length === 0) continue;
+    lines.push(`## ${bucket.toUpperCase()} (${grouped[bucket].length})`);
+    lines.push("");
+    grouped[bucket].forEach(i => {
+      lines.push(`- #${i.id} | ${i.target} | ${i.leverage} | ${i.url}`);
+      lines.push(`  ${i.reason.replace(/\n/g, " ").slice(0,200)}${i.reason.length > 200 ? "..." : ""}`);
+      lines.push("");
+    });
+  }
+  const out = lines.join("\n");
+  document.getElementById("export-out").textContent = out;
+  document.getElementById("export-out").classList.add("show");
+  navigator.clipboard.writeText(out).then(() => {
+    document.querySelector(".export").textContent = "Copied to clipboard ✓";
+    setTimeout(() => { document.querySelector(".export").textContent = "Export decisions ↓"; }, 2000);
+  });
+}
+
+document.getElementById("search").addEventListener("input", render);
+render();
+</script>
+
+</body>
+</html>
