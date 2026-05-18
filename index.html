@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E3A5F">
 <title>Absorb Follow-ups Triage — 2026-05-17</title>
 <style>
   :root {
@@ -21,7 +23,7 @@
     background: var(--bg); color: var(--ink);
     font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 14px; line-height: 1.5;
-    padding: 28px 32px; min-height: 100vh;
+    padding: clamp(14px, 4vw, 28px); min-height: 100vh; -webkit-tap-highlight-color: transparent;
   }
   header { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid var(--blue); }
   h1 { font-size: 22pt; letter-spacing: -0.01em; color: var(--blue); margin-bottom: 4px; }
@@ -93,7 +95,7 @@
   .choices {
     display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid var(--hair);
   }
-  .choice {
+  .choice { min-height: 44px; display: flex; align-items: center; justify-content: center;
     flex: 1; text-align: center; padding: 8px 12px; border-radius: 3px;
     cursor: pointer; font-size: 12px; font-weight: 600;
     font-family: inherit; border: 1px solid var(--hair); background: white;
@@ -104,7 +106,7 @@
   .choice.active.today { background: var(--sage); color: white; border-color: var(--sage); }
   .choice.active.later { background: var(--gold); color: white; border-color: var(--gold); }
   .choice.active.skip { background: var(--muted); color: white; border-color: var(--muted); }
-  .export {
+  .export { min-height: 52px;
     position: fixed; bottom: 24px; right: 24px;
     background: var(--blue); color: white; border: none;
     padding: 14px 22px; border-radius: 4px; cursor: pointer;
@@ -118,6 +120,25 @@
     border-radius: 4px; white-space: pre-wrap; display: none; line-height: 1.5;
   }
   .export-out.show { display: block; }
+  @media (max-width: 640px) {
+    h1 { font-size: 18pt; }
+    header { margin-bottom: 16px; padding-bottom: 12px; }
+    .summary { padding: 12px 14px; font-size: 11px; }
+    .controls { flex-direction: column; align-items: stretch; padding: 12px; gap: 10px; }
+    .controls input[type="text"] { min-width: 0; width: 100%; font-size: 16px; }
+    .controls .count { text-align: center; }
+    .controls button { width: 100%; padding: 12px; min-height: 44px; }
+    .card { padding: 14px 16px; margin-bottom: 12px; }
+    .card-head { flex-direction: column; gap: 6px; }
+    .url-link { font-size: 10px; }
+    .tags { gap: 5px; }
+    .tag { font-size: 9px; padding: 3px 7px; }
+    .reason { font-size: 13px; }
+    .choices { flex-direction: column; gap: 6px; }
+    .choice { padding: 12px; font-size: 13px; }
+    .export { right: 12px; left: 12px; bottom: 12px; padding: 16px; font-size: 14px; box-shadow: 0 -2px 12px rgba(0,0,0,0.2); }
+    .export-out { font-size: 10px; padding: 12px; }
+  }
 </style>
 </head>
 <body>
